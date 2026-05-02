@@ -1,0 +1,2 @@
+npx kill-port 3099
+node server.js
