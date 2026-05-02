@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Background -->
+  <rect width="128" height="128" rx="24" fill="#232F3E"/>
+  
+  <!-- Amazon Q "Q" letter -->
+  <circle cx="56" cy="56" r="28" fill="none" stroke="#FF9900" stroke-width="8"/>
+  <line x1="70" y1="70" x2="88" y2="88" stroke="#FF9900" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Amazon smile arrow on Q tail -->
+  <path d="M 80 84 L 88 88 L 84 80" fill="none" stroke="#FF9900" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Debug bug icon badge -->
+  <circle cx="102" cy="100" r="24" fill="#0078D4"/>
+  <circle cx="102" cy="100" r="23" fill="#0078D4" stroke="#232F3E" stroke-width="2"/>
+  
+  <!-- Bug body -->
+  <ellipse cx="102" cy="102" rx="8" ry="10" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <!-- Bug head -->
+  <circle cx="102" cy="91" r="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <!-- Bug middle line -->
+  <line x1="94" y1="102" x2="110" y2="102" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Bug legs left -->
+  <line x1="94" y1="96" x2="89" y2="92" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <line x1="94" y1="102" x2="88" y2="102" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <line x1="94" y1="108" x2="89" y2="112" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <!-- Bug legs right -->
+  <line x1="110" y1="96" x2="115" y2="92" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <line x1="110" y1="102" x2="116" y2="102" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <line x1="110" y1="108" x2="115" y2="112" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <!-- Bug antennae -->
+  <line x1="99" y1="88" x2="96" y2="84" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="105" y1="88" x2="108" y2="84" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,8 @@
+.vscode/**
+node_modules/**
+src/**
+tsconfig.json
+esbuild.js
+**/*.map
+**/*-b64.txt
+resources/screenshots/*.png

@@ -1,0 +1,90 @@
+{
+  "name": "q-log-session-viewer",
+  "displayName": "Q Log Session Viewer (Unofficial)",
+  "description": "View and analyze local Q-related debug logs and chat history from VS Code",
+  "version": "0.1.1",
+  "publisher": "SiddheshPrabhugaonkar",
+  "author": {
+    "name": "Siddhesh Prabhugankar",
+    "url": "https://github.com/siddheshp"
+  },
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "galleryBanner": {
+    "color": "#232F3E",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "keywords": [
+    "logs",
+    "debug",
+    "chat",
+    "viewer",
+    "analysis"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "amazonq-logviewer.open",
+        "title": "Q Log Session Viewer: Open",
+        "icon": {
+          "light": "resources/icon-sidebar-light.svg",
+          "dark": "resources/icon-sidebar-dark.svg"
+        }
+      },
+      {
+        "command": "amazonq-logviewer.refresh",
+        "title": "Q Log Session Viewer: Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "amazonq-logviewer",
+          "title": "Q Logs",
+          "icon": "resources/icon-sidebar-dark.svg"
+        }
+      ]
+    },
+    "views": {
+      "amazonq-logviewer": [
+        {
+          "type": "webview",
+          "id": "amazonq-logviewer.viewer",
+          "name": "Log Viewer"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "amazonq-logviewer.open",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.1",
+    "esbuild": "^0.20.0",
+    "sharp": "^0.34.5",
+    "typescript": "^5.3.0"
+  }
+}

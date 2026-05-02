@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Q letter - orange -->
+  <path d="M 10 3 a 7 7 0 1 0 0 14 a 7 7 0 1 0 0 -14 z M 10 5 a 5 5 0 1 1 0 10 a 5 5 0 1 1 0 -10 z" fill="#FF9900"/>
+  <path d="M 13 13 L 17 17" stroke="#FF9900" stroke-width="2" stroke-linecap="round"/>
+  <!-- Debug bug badge - blue background circle -->
+  <circle cx="20" cy="20" r="3.8" fill="#3794FF"/>
+  <!-- Bug body -->
+  <ellipse cx="20" cy="20.3" rx="1.4" ry="1.8" fill="#ffffff"/>
+  <!-- Bug antennae -->
+  <path d="M 19 18.5 L 18.4 17.8 M 21 18.5 L 21.6 17.8" stroke="#ffffff" stroke-width="0.5" stroke-linecap="round"/>
+</svg>
