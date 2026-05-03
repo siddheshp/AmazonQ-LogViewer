@@ -25,8 +25,10 @@ This is an independent, community-built tool. It is **not affiliated with, endor
 ## Features
 
 - Browse detected log and chat sessions in a card-based overview
+- **Search sessions** by name or source directly from the sessions list
 - Filter entries by category badges and free-text search
 - View full request/response/tool-call details in a popup panel
+- **Export any session as Markdown (`.md`) or HTML (`.html`)** using the ↓ MD / ↓ HTML buttons
 - Copy JSON and detail blocks to clipboard
 - Sidebar view (activity bar) and full editor panel view
 - Light and dark theme toggle
@@ -72,6 +74,12 @@ If the extension shows "No Log Sessions Found", check that:
 - Very large logs use virtualized row rendering for performance.
 
 ## Release Notes
+
+### 0.1.2
+
+- **Session search**: Filter the sessions list by typing in the search box on the sessions overview page
+- **Export to Markdown**: Export any session as a `.md` file (all entries with timestamps, categories, and message bodies)
+- **Export to HTML**: Export any session as a self-contained `.html` file with styled, readable layout
 
 ### 0.1.1
 

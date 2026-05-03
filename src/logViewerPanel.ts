@@ -84,6 +84,21 @@ export class LogViewerPanel {
       case 'copyToClipboard':
         vscode.env.clipboard.writeText(message.text);
         break;
+      case 'exportSession':
+        (async () => {
+          const filters = message.format === 'markdown'
+            ? { 'Markdown': ['md'] }
+            : { 'HTML': ['html'] };
+          const uri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(message.filename),
+            filters
+          });
+          if (uri) {
+            await vscode.workspace.fs.writeFile(uri, Buffer.from(message.content, 'utf-8'));
+            vscode.window.showInformationMessage(`Session exported to ${uri.fsPath}`);
+          }
+        })();
+        break;
     }
   }
 
@@ -134,6 +149,21 @@ export class LogViewerSidebarProvider implements vscode.WebviewViewProvider {
           break;
         case 'copyToClipboard':
           vscode.env.clipboard.writeText(message.text);
+          break;
+        case 'exportSession':
+          (async () => {
+            const filters = message.format === 'markdown'
+              ? { 'Markdown': ['md'] }
+              : { 'HTML': ['html'] };
+            const uri = await vscode.window.showSaveDialog({
+              defaultUri: vscode.Uri.file(message.filename),
+              filters
+            });
+            if (uri) {
+              await vscode.workspace.fs.writeFile(uri, Buffer.from(message.content, 'utf-8'));
+              vscode.window.showInformationMessage(`Session exported to ${uri.fsPath}`);
+            }
+          })();
           break;
       }
     });
@@ -270,6 +300,8 @@ function getViewerHtml(nonce: string): string {
   .empty-state h3{font-size:16px;color:var(--txt)}.empty-state p{font-size:13px;max-width:420px;line-height:1.5}
   .spinner{width:28px;height:28px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .session-search-wrap{padding:8px 10px 0;display:none}
+  .session-search-wrap.visible{display:block}
 </style>
 </head>
 <body>
@@ -305,12 +337,15 @@ function getViewerHtml(nonce: string): string {
 <div class="content">
   <div class="page sessions-page active" id="sessionsPage">
     <div class="empty-state" id="sessionsLoading"><div class="spinner"></div><h3>Loading sessions...</h3><p>Reading VS Code logs and Amazon Q chat history.</p></div>
+    <div class="session-search-wrap" id="sessionSearchWrap"><input class="finput" id="sessionSearch" placeholder="&#128269; Search sessions..." style="width:100%"></div>
     <div id="sessionsContent" style="display:none"></div>
   </div>
   <div class="page entries-page" id="entriesPage">
     <div class="etoolbar">
       <button class="btn-back" id="backBtn"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.56 7.25H13a.75.75 0 010 1.5H4.56l3.22 3.22a.75.75 0 010 1.06z"/></svg>Back</button>
       <input class="finput" id="entryFilter" placeholder="Filter entries...">
+      <button class="btn btn-sec" id="exportMdBtn" title="Export session as Markdown">&#8595; MD</button>
+      <button class="btn btn-sec" id="exportHtmlBtn" title="Export session as HTML">&#8595; HTML</button>
       <div class="fbadges" id="entryBadges"></div>
     </div>
     <div class="ehdr"><div>Timestamp</div><div>Category / Details</div></div>
@@ -329,7 +364,7 @@ function getViewerHtml(nonce: string): string {
 <script nonce="${nonce}">
 (function(){
 const vscode = acquireVsCodeApi();
-let allSessions=[],curSession=null,filteredEntries=[],selEntry=null,activeFilters=new Set();
+let allSessions=[],curSession=null,filteredEntries=[],selEntry=null,activeFilters=new Set(),sessionSearch='';
 const ROW_H=52;
 
 const CAT={
@@ -371,6 +406,9 @@ document.getElementById('entryFilter').addEventListener('input', applyFilter);
 document.getElementById('popOv').addEventListener('click', function(e){ if(e.target===this) closePop(); });
 document.getElementById('closePopBtn').addEventListener('click', closePop);
 document.getElementById('copyJsonBtn').addEventListener('click', copyJSON);
+document.getElementById('sessionSearch').addEventListener('input', function(){ sessionSearch=this.value.toLowerCase(); renderSessions(); });
+document.getElementById('exportMdBtn').addEventListener('click', exportMarkdown);
+document.getElementById('exportHtmlBtn').addEventListener('click', exportHtml);
 
 /* Message handler from extension */
 window.addEventListener('message', event => {
@@ -390,6 +428,8 @@ window.addEventListener('message', event => {
 function loadAll(){
   document.getElementById('sessionsLoading').style.display='flex';
   document.getElementById('sessionsContent').style.display='none';
+  document.getElementById('sessionSearchWrap').classList.remove('visible');
+  sessionSearch='';
   if(curSession) goBack();
   allSessions=[];
   vscode.postMessage({ command: 'loadData' });
@@ -431,12 +471,15 @@ function summarize(entries){const cats={};for(const e of entries)cats[e.category
 function renderSessions(){
   document.getElementById('sessionsLoading').style.display='none';
   const c=document.getElementById('sessionsContent');c.style.display='block';
+  document.getElementById('sessionSearchWrap').classList.add('visible');
+  const q=sessionSearch;
   let h='';
-  const chats=allSessions.filter(s=>s.type==='chat');
-  const logs=allSessions.filter(s=>s.type==='log');
+  const chats=allSessions.filter(s=>s.type==='chat'&&(!q||(s.label+' '+s.subtitle).toLowerCase().includes(q)));
+  const logs=allSessions.filter(s=>s.type==='log'&&(!q||(s.label+' '+s.subtitle).toLowerCase().includes(q)));
   if(chats.length){h+='<div class="sec-title">Chat History ('+chats.length+' conversations)</div><div class="sgrid">';for(const s of chats)h+=sCard(s);h+='</div>'}
   if(logs.length){h+='<div class="sec-title">Log Sessions ('+logs.length+')</div><div class="sgrid">';for(const s of logs)h+=sCard(s);h+='</div>'}
-  if(!h)h='<div class="empty-state"><h3>No Log Sessions Found</h3><p>No Amazon Q log files or chat history were found on this machine.</p><p style="text-align:left;font-size:12px;background:var(--bg3);padding:12px;border-radius:6px;width:100%;max-width:420px"><strong>Locations checked:</strong><br>\u2022 Chat history: <code>~/.aws/amazonq/history/</code><br>\u2022 VS Code logs: <code>&lt;VS Code logs dir&gt;/.../Amazon Q Logs.log</code></p><p style="font-size:12px">Make sure the <strong>Amazon Q for VS Code</strong> extension is installed and you have had at least one chat session. Then click <strong>Refresh</strong>.</p></div>';
+  if(!h&&q)h='<div class="empty-state"><h3>No matching sessions</h3><p>No sessions match \"'+esc(q)+'\".</p></div>';
+  else if(!h)h='<div class="empty-state"><h3>No Log Sessions Found</h3><p>No Amazon Q log files or chat history were found on this machine.</p><p style="text-align:left;font-size:12px;background:var(--bg3);padding:12px;border-radius:6px;width:100%;max-width:420px"><strong>Locations checked:</strong><br>\u2022 Chat history: <code>~/.aws/amazonq/history/</code><br>\u2022 VS Code logs: <code>&lt;VS Code logs dir&gt;/.../Amazon Q Logs.log</code></p><p style="font-size:12px">Make sure the <strong>Amazon Q for VS Code</strong> extension is installed and you have had at least one chat session. Then click <strong>Refresh</strong>.</p></div>';
   c.innerHTML=h;
   c.querySelectorAll('.scard').forEach(function(card){card.addEventListener('click',function(){openSession(card.dataset.id)})});
 }
@@ -683,6 +726,64 @@ function parseChat(json,filename){
   return entries;
 }
 function fmtToolInput(i){if(!i)return '';if(i.path)return i.path;if(i.query)return i.query;if(i.filePath)return i.filePath;return JSON.stringify(i).substring(0,120)}
+
+/* ── Export ── */
+function sessionModels(entries){const s=new Set();for(const e of entries){if(e.data?.modelId&&e.data.modelId!=='auto')s.add(e.data.modelId)}return s.size?[...s].join(', '):null}
+function exportMarkdown(){
+  if(!curSession)return;
+  const entries=curSession.entries;
+  const models=sessionModels(entries);
+  let md='# '+curSession.label+'\\n\\n';
+  md+='- **Source:** '+curSession.subtitle+'\\n';
+  md+='- **Type:** '+(curSession.type==='chat'?'Chat History':'VS Code Log')+'\\n';
+  if(models)md+='- **Model:** '+models+'\\n';
+  md+='- **Entries:** '+entries.length+'\\n\\n---\\n\\n';
+  for(const e of entries){
+    md+='## '+e.name+'\\n\\n';
+    const modelLine=e.data?.modelId&&e.data.modelId!=='auto'?'**Model:** '+e.data.modelId+'  \\n':'';
+    md+='**Time:** '+fmtTSFull(e.timestamp)+'  \\n**Category:** '+e.category+'  \\n'+modelLine+'\\n';
+    if(e.data?.body)md+=e.data.body+'\\n\\n';
+    else if(e.summary)md+='> '+e.summary+'\\n\\n';
+    if(e.category==='Tool Call'&&e.data?.input){
+      const inp=JSON.stringify(e.data.input,null,2).split('\\n').map(function(l){return '    '+l}).join('\\n');
+      md+=inp+'\\n\\n';
+    }
+    md+='---\\n\\n';
+  }
+  const safeName=curSession.label.replace(/[^a-z0-9_\\-\\s]/gi,'').trim().replace(/\\s+/g,'_')||'session';
+  vscode.postMessage({command:'exportSession',format:'markdown',content:md,filename:safeName+'.md'});
+}
+function exportHtml(){
+  if(!curSession)return;
+  const entries=curSession.entries;
+  const models=sessionModels(entries);
+  const catColors={'Request':'#0e639c','Slash Command':'#c586c0','Rules':'#2e7d6e','LLM Call':'#9b59b6','Response':'#388a34','Tool Call':'#d68c00','MCP':'#6a5acd','Error':'#a31515'};
+  let rows='';
+  for(const e of entries){
+    const color=catColors[e.category]||'#555';
+    const modelTag=e.data?.modelId&&e.data.modelId!=='auto'?'<span class="model-tag">'+esc(e.data.modelId)+'</span>':'';
+    rows+='<div class="entry"><div class="entry-hdr"><span class="badge" style="background:'+color+'">'+esc(e.category)+'</span><span class="name">'+esc(e.name)+'</span>'+modelTag+'<span class="ts">'+fmtTSFull(e.timestamp)+'</span></div>';
+    if(e.data?.body)rows+='<div class="entry-body"><div class="body">'+esc(e.data.body)+'</div></div>';
+    rows+='</div>';
+  }
+  const modelMeta=models?' &bull; <span style="color:#4ec9b0">'+esc(models)+'</span>':'';
+  const html='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>'+esc(curSession.label)+'</title>'
+    +'<style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;background:#1e1e1e;color:#ccc;margin:0;padding:0}'
+    +'header{background:#252526;border-bottom:1px solid #3c3c3c;padding:16px 24px}'
+    +'header h1{font-size:20px;color:#e0e0e0;margin:0 0 4px}header p{color:#858585;font-size:12px;margin:0}'
+    +'main{padding:16px 24px;max-width:1200px}'
+    +'.entry{border:1px solid #3c3c3c;border-radius:6px;margin-bottom:10px;overflow:hidden}'
+    +'.entry-hdr{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#252526;flex-wrap:wrap}'
+    +'.badge{padding:2px 8px;border-radius:10px;font-size:11px;color:#fff;font-weight:500}'
+    +'.model-tag{padding:2px 8px;border-radius:10px;font-size:11px;background:rgba(78,201,176,.15);color:#4ec9b0;font-family:monospace}'
+    +'.name{font-weight:500;color:#e0e0e0}.ts{margin-left:auto;font-family:monospace;font-size:11px;color:#858585}'
+    +'.entry-body{padding:10px 12px}.body{white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.5}'
+    +'</style></head><body>'
+    +'<header><h1>'+esc(curSession.label)+'</h1><p>'+esc(curSession.subtitle)+' &bull; '+entries.length+' entries'+modelMeta+' &bull; Exported '+new Date().toLocaleString()+'</p></header>'
+    +'<main>'+rows+'</main></body></html>';
+  const safeName=curSession.label.replace(/[^a-z0-9_\\-\\s]/gi,'').trim().replace(/\\s+/g,'_')||'session';
+  vscode.postMessage({command:'exportSession',format:'html',content:html,filename:safeName+'.html'});
+}
 
 /* ── Helpers ── */
 function fmtTS(d){if(!d||isNaN(d))return '';return p2(d.getMonth()+1)+'/'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}

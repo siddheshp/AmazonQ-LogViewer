@@ -2,13 +2,17 @@
   "name": "q-log-session-viewer",
   "displayName": "Q Log Session Viewer (Unofficial)",
   "description": "View and analyze local Q-related debug logs and chat history from VS Code",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "SiddheshPrabhugaonkar",
   "author": {
     "name": "Siddhesh Prabhugankar",
     "url": "https://github.com/siddheshp"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siddheshp/amazonq-logviewer"
+  },
   "icon": "resources/icon.png",
   "galleryBanner": {
     "color": "#232F3E",
